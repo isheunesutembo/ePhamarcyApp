@@ -1,5 +1,10 @@
-import 'package:ephamarcy/pages/signin.dart';
-import 'package:ephamarcy/services/authservice.dart';
+import 'package:ephamarcy/data/fakedata.dart';
+import 'package:ephamarcy/pages/cart_page.dart';
+import 'package:ephamarcy/pages/favourites.dart';
+import 'package:ephamarcy/pages/mainpage.dart';
+import 'package:ephamarcy/pages/profilepage.dart';
+import 'package:ephamarcy/widgets/categories_widgets.dart';
+import 'package:ephamarcy/widgets/products_widget.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -10,28 +15,59 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  AuthService authService = AuthService();
+  int selectedIndex=0;
+  void _onItemTap(int index){
+    setState(() {
+      selectedIndex=index;
+    });
+  }
+
+  List<Widget>pages=[
+    MainPage(),
+    FavouritesPage(),
+    CartPage(),
+    ProfilePage()
+  ];
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          actions: [
-            ElevatedButton(
-                onPressed: (() {
-                  authService.signOut();
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                          builder: (BuildContext context) => SignIn()),
-                      (route) => false);
-                }),
-                child: Text("Sign Out"))
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        currentIndex: selectedIndex,
+        selectedItemColor: Colors.blue,
+        onTap: _onItemTap
+        ,items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.home,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+                label: "Home"),
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.favorite,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+                label: "Favourites"),
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.shopping_bag_outlined,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+                label: "Cart"),
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.person,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+                label: "Profile"),
           ],
         ),
-        body: Container(
-          child: Text("Firebase Auth"),
-        ));
+        body: pages[selectedIndex]);
   }
 }

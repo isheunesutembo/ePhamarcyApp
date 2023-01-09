@@ -1,38 +1,48 @@
-import 'package:ephamarcy/pages/authchecker.dart';
+import 'package:ephamarcy/common.dart/error.dart';
+import 'package:ephamarcy/controllers/authcontroller.dart';
+import 'package:ephamarcy/models/user.dart';
 import 'package:ephamarcy/pages/errorscreen.dart';
-import 'package:ephamarcy/pages/home.dart';
 import 'package:ephamarcy/pages/loadingscreen.dart';
-import 'package:ephamarcy/pages/register.dart';
 import 'package:ephamarcy/pages/signin.dart';
+import 'package:ephamarcy/router.dart';
+import 'package:ephamarcy/widgets/loader.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
+import 'pages/home.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp( ProviderScope(child: MyApp()));
 }
 
-final firebaseinitializerProvider = FutureProvider<FirebaseApp>((ref) async {
-  return await Firebase.initializeApp();
-});
-
 class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+  UserModel? userModel;
+ getData(WidgetRef ref,User data)async{
+  userModel=ref.watch(authControllerProvider.notifier).getUserData(data.uid).first as UserModel?;
+  ref.read(userProvider.notifier).update((state) => userModel);
+ }
+   MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final initialize = ref.watch(firebaseinitializerProvider);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-
-      home: initialize.when(
-          data: (data) {
-            return const AuthChecker();
-          },
-          loading: () => const LoadingScreen(),
-          error: (e, stackTrace) => ErrorScreen(e, stackTrace)),
-    );
+    return ref.watch(authStateChangeProvider).when(
+        data: (data) => MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: Theme.of(context),
+              routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
+                if (data != null) {
+                  getData(ref, data);
+                  return loggedOutRoute;
+                }
+                return loggedInRoute;
+              }),
+              routeInformationParser: RoutemasterParser(),
+            ),
+        error: (error, stackTrace) => ErrorText(error: error.toString()),
+        loading: () => Loader());
   }
 }

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 class ErrorScreen extends StatelessWidget {
   final Object e;
   final StackTrace? trace;
-
-
-  const ErrorScreen(this.e,this.trace,{Key? key}) : super(key: key);
+  const ErrorScreen({required this.e,this.trace,super.key});
 
   @override
   Widget build(BuildContext context) {

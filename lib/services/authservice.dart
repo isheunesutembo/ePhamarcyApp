@@ -1,62 +1,72 @@
-import 'package:ephamarcy/models/usermodel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ephamarcy/constants/firebase_constants.dart';
+import 'package:ephamarcy/core/failure.dart';
+import 'package:ephamarcy/core/type_defs.dart';
+import 'package:ephamarcy/models/user.dart';
+import 'package:ephamarcy/pages/signin.dart';
+import 'package:ephamarcy/providers/firebaseproviders/firebaseproviders.dart';
+import 'package:ephamarcy/services/firebasestorageservice.dart';
+import 'package:ephamarcy/services/userservice.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+
+final authServiceProvider = Provider((ref) => AuthService(
+    firestore: ref.read(firebaseFirestoreProvider),
+    firebaseAuth: ref.read(firebaseAuthProvider),
+    firebaseStorage: ref.read(firebaseStorageProvider)));
 
 class AuthService {
-  FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _firebaseAuth;
+  final FirebaseStorage _firebaseStorage;
+
+  AuthService(
+      {required FirebaseFirestore firestore,
+      required FirebaseAuth firebaseAuth,
+      required FirebaseStorage firebaseStorage})
+      : _firestore = firestore,
+        _firebaseAuth = firebaseAuth,
+        _firebaseStorage = firebaseStorage;
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+
   Stream<User?> get authStateChange => _firebaseAuth.authStateChanges();
 
-  Future<void> signInWithEmailAndPassword(
-      String email, String password, BuildContext context) async {
+  late UserModel _userModel;
+
+  FutureEither<UserModel> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
       await _firebaseAuth.signInWithEmailAndPassword(
           email: email, password: password);
-          
-    } on FirebaseAuthException catch (e) {
-      await showDialog(
-          context: context,
-          builder: ((context) => AlertDialog(
-                title: Text("Error Occured"),
-                content: Text(e.toString()),
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text("Ok"))
-                ],
-              )));
+      return right(UserModel(uid: _firebaseAuth.currentUser!.uid));
+    } catch (e) {
+      return left(Failure(message: e.toString()));
     }
   }
 
-  Future<void>signupWithEmailAndPassword(String email,String password,BuildContext context)async{
-    try{
-      _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
-    }on FirebaseAuthException catch (e) {
-      await showDialog(
-          context: context,
-          builder: ((context) => AlertDialog(
-                title: Text("Error Occured"),
-                content: Text(e.toString()),
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text("Ok"))
-                ],
-              )));
-    }catch(e){
-      if(e=='email already in use'){
-        print("email already in use");
-      }else{
-        print("Error:$e");
-      }
+  FutureEither<UserModel> signUpWithEmailAndPassword(
+      String email, String password) async {
+    try {
+      _firebaseAuth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      _userModel = UserModel(uid: _firebaseAuth.currentUser!.uid);
+      await _users.doc(_firebaseAuth.currentUser!.uid).set(_userModel);
+      return right(UserModel(uid: _firebaseAuth.currentUser!.uid));
+    } catch (e) {
+      return left(Failure(message: e.toString()));
     }
-  } 
+  }
 
-  Future<void>signOut()async{
+  Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  Stream<UserModel> getUserData(uid) {
+    return _users.doc(uid).snapshots().map(
+        (event) => UserModel.fromMap(event.data() as Map<String, dynamic>));
   }
 }

@@ -1,153 +1,177 @@
+import 'package:ephamarcy/controllers/authcontroller.dart';
+import 'package:ephamarcy/pages/signin.dart';
 import 'package:ephamarcy/services/authservice.dart';
+import 'package:ephamarcy/widgets/loader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Register extends StatefulWidget {
-  Register({Key? key}) : super(key: key);
+class Register extends ConsumerStatefulWidget {
+  const Register({super.key});
 
   @override
-  State<Register> createState() => _RegisterState();
+  ConsumerState<Register> createState() => _RegisterState();
 }
 
-class _RegisterState extends State<Register> {
+class _RegisterState extends ConsumerState<Register> {
   final GlobalKey _formKey = GlobalKey<FormState>();
   String _email = "";
   String _password = "";
-  AuthService authService = AuthService();
+  signUpWithEmailAndPassword(
+      BuildContext context, WidgetRef ref, String email, String password) {
+    ref
+        .read(authControllerProvider.notifier)
+        .signUpWithEmailAndPassword(context, email, password);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.white,
-      elevation: 0,),
-      body: SafeArea(child: SingleChildScrollView(
-        child: Form(child: Column(
-          children: [
-             Center(
-                    child: ClipRRect(
+    final isLoading = ref.watch(authControllerProvider);
+
+    return isLoading
+        ? const Loader()
+        : Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.white,
+            ),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                  child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    Center(
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: Image.asset(
                           "assets/icon/pills.png",
-                          width: 80,
                           height: 80,
-                        ))),
-                SizedBox(
-                  height: 32,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    
-                    enableSuggestions: true,
-                    keyboardType: TextInputType.emailAddress,
-                    onChanged: (value) {
-
-                      setState(() {
-                        _email=value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          width: 80,
                         ),
-                        hintText: "email ",
-                        hintStyle: TextStyle(color: Colors.black),
-                        prefixIcon: Icon(
-                          Icons.email_outlined,
-                          color: Colors.black,
-                          size: 20,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        enableSuggestions: true,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (value) {
+                          _email = value;
+                        },
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          hintText: 'email:',
+                          hintStyle: const TextStyle(color: Colors.black),
+                          prefixIcon: const Icon(Icons.email_outlined,
+                              color: Colors.black, size: 20),
+                          alignLabelWithHint: true,
                         ),
-                        alignLabelWithHint: true),
-                    validator: ((value) {
-                      if (value!.isEmpty || !value.contains("@")) {
-                        return "Invalid Email Addresss";
-                      }
-                      return null;
-                    }),
-                  ),
-                ),
-                SizedBox(
-                  height: 32,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    
-                    enableSuggestions: true,
-                    keyboardType: TextInputType.visiblePassword,
-                    onChanged: (value) {
-                      _password=value;
-                    },
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                        validator: ((value) {
+                          if (value!.isEmpty || !value.contains("@")) {
+                            return "Invalid email address";
+                          }
+                          return null;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        enableSuggestions: true,
+                        keyboardType: TextInputType.visiblePassword,
+                        onChanged: (value) {
+                          _password = value;
+                        },
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          hintText: 'password:',
+                          hintStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.email_outlined,
+                              color: Colors.black, size: 20),
+                          alignLabelWithHint: true,
                         ),
-                        hintText: "Password ",
-                        hintStyle: TextStyle(color: Colors.black),
-                      prefixIcon: Icon(
-                          Icons.password_outlined,
-                          color: Colors.black,
-                          size: 20,
+                        validator: ((value) {
+                          if (value!.isEmpty || value.length < 6) {
+                            return "Password is too short";
+                          }
+                          return null;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        enableSuggestions: true,
+                        keyboardType: TextInputType.visiblePassword,
+                        onChanged: (value) {
+                          _password = value;
+                        },
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          hintText: 'password:',
+                          hintStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.email_outlined,
+                              color: Colors.black, size: 20),
+                          alignLabelWithHint: true,
                         ),
-                        alignLabelWithHint: true),
-                    validator: ((value) {
-                      if (value!.isEmpty || value.length < 8) {
-                        return "Password is too short at least 8 characters";
-                      }
-                      return null;
-                    }),
-                  ),
+                        validator: ((value) {
+                          if (value != _password) {
+                            return "Passwords do  not match";
+                          }
+                          return null;
+                        }),
+                      ),
+                    ),
+                    const Divider(thickness: 2),
+                    Center(
+                        child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SignIn(),
+                                  ),
+                                  (route) => false);
+                            },
+                            child: const Text(
+                                "Already have an account ? SignIn",
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.bold)))),
+                    SizedBox(
+                        width: 300,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            signUpWithEmailAndPassword(
+                                context, ref, _email.trim(), _password.trim());
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => SignIn()));
+                          },
+                          child: Text("Register"),
+                        ))
+                  ],
                 ),
-                SizedBox(height: 32,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                   
-                    enableSuggestions: true,
-                    keyboardType: TextInputType.visiblePassword,
-                    onSaved: (value) {},
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: "Confirm Password",
-                        hintStyle: TextStyle(color: Colors.black),
-                        prefixIcon: Icon(
-                          Icons.password_outlined,
-                          color: Colors.black,
-                          size: 20,
-                        ),
-                        alignLabelWithHint: true),
-                    validator: ((value) {
-                      if (value !=_password) {
-                        return "Passwords do not match";
-                      }
-                      return null;
-                    }),
-                  ),
-                ),
-                Divider(
-                  thickness:2,
-                ),
-                
-                SizedBox(
-                  height: 32,
-                ),
-                SizedBox(
-                    width: 300,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (() async{
-                        authService.signupWithEmailAndPassword(
-                            _email.trim(), _password.trim(), context);
-                            Navigator.pop(context);
-                      }),
-                      child: Text("SignIn"),
-                    )),
-                    const Divider(thickness: 2,),
-                    const Center(child: Text("Already have an account ?",style: TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.bold),))
-          ],
-        )),
-      )),
-    );
+              )),
+            ),
+          );
   }
 }
